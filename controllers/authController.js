@@ -21,6 +21,7 @@ const createSendToken = (user, statusCode, res) => {
 // SIGNUP
 exports.signup = async (req, res) => {
   try {
+    console.log(req.baseUrl + req.path, "request for signup");
     const newUser = await Profiles.create(req.body);
     createSendToken(newUser, 201, res);
   } catch (err) {
@@ -31,11 +32,14 @@ exports.signup = async (req, res) => {
 // LOGIN
 exports.login = async (req, res) => {
   try {
+    console.log(req.baseUrl + req.path, "request for login");
     const { email, password } = req.body;
 
     // 1) Check email & password exist
     if (!email || !password) {
-      return res.status(400).json({ message: "Please provide email & password" });
+      return res
+        .status(400)
+        .json({ message: "Please provide email & password" });
     }
 
     // 2) Find user + check password
@@ -55,14 +59,17 @@ exports.login = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const user = await Profiles.findOne({ email: req.body.email });
-    if (!user) return res.status(404).json({ message: "No user with that email" });
+    if (!user)
+      return res.status(404).json({ message: "No user with that email" });
 
     // Generate reset token
     const resetToken = Profiles.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
     // Send reset link via email
-    const resetURL = `${req.protocol}://${req.get("host")}/api/v1/auth/resetPassword/${resetToken}`;
+    const resetURL = `${req.protocol}://${req.get(
+      "host"
+    )}/api/v1/auth/resetPassword/${resetToken}`;
 
     const message = `Forgot password? Submit a PATCH request with your new password & confirm password to: ${resetURL}`;
 
@@ -72,7 +79,9 @@ exports.forgotPassword = async (req, res) => {
       message,
     });
 
-    res.status(200).json({ status: "success", message: "Token sent to email!" });
+    res
+      .status(200)
+      .json({ status: "success", message: "Token sent to email!" });
   } catch (err) {
     res.status(500).json({ status: "error", message: err.message });
   }
@@ -91,7 +100,8 @@ exports.resetPassword = async (req, res) => {
       passwordResetExpires: { $gt: Date.now() },
     });
 
-    if (!user) return res.status(400).json({ message: "Token invalid or expired" });
+    if (!user)
+      return res.status(400).json({ message: "Token invalid or expired" });
 
     user.password = req.body.password;
     user.passwordConfirm = req.body.passwordConfirm;
