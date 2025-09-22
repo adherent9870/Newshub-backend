@@ -8,7 +8,7 @@ router.get("/test", (req, res) => {
 });
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
-router.post("/forgotPassword", authController.forgotPassword);
-router.patch("/resetPassword/:token", authController.resetPassword);
+router.post("/forgotpassword", authController.forgotPassword);
+router.patch("/resetpassword/:token", authController.resetPassword);
 
 module.exports = router;

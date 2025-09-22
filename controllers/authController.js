@@ -63,7 +63,7 @@ exports.forgotPassword = async (req, res) => {
       return res.status(404).json({ message: "No user with that email" });
 
     // Generate reset token
-    const resetToken = Profiles.createPasswordResetToken();
+    const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
     // Send reset link via email
