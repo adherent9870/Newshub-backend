@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const Post = require("../models/postModel");
+const { post } = require("../routes/postRoutes");
 
 // Get a single post by ID
 exports.getPostById = async (req, res) => {
@@ -28,9 +29,25 @@ exports.getPostById = async (req, res) => {
     });
   }
 };
+exports.getPostByUserId = async (req, res) => {
+  try {
+    const posts = await Post.find({ postBy: req.body.user }).populate(
+      "postBy",
+      "name email"
+    );
+    res.status(200).json({
+      status: "success",
+      results: posts.length,
+      data: { posts },
+    });
+  } catch (err) {
+    res.status(500).json({ status: "error", message: err.message });
+  }
+};
 
 exports.getAllPosts = async (req, res) => {
   try {
+    console.log("get all posts request recieved");
     // Populate 'postBy' to fetch user details
     const posts = await Post.find().populate("postBy", "name email");
 
@@ -81,10 +98,14 @@ exports.createPost = async (req, res) => {
 
 exports.deletePost = async (req, res) => {
   try {
+    console.log("delete the post request recieved");
     // Extract token from Authorization header
     const token = req.headers.authorization.split(" ")[1];
     if (!token) {
-      return res.status(401).json({ status: "fail", message: "Unauthorized" });
+      return res.status(401).json({
+        status: "fail",
+        message: "Unauthorized, you are not allowed for this action",
+      });
     }
 
     // Verify token
@@ -92,7 +113,7 @@ exports.deletePost = async (req, res) => {
     if (!decoded) {
       return res.status(401).json({ status: "fail", message: "Invalid token" });
     }
-
+    // console.log(decoded);
     // Find the post to ensure it exists and belongs to the user
     const post = await Post.findById(req.params.id);
     if (!post) {
