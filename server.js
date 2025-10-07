@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const http = require("http");
+const Conversation = require("./models/conversationModel");
+const Message = require("./models/messageModel");
 const { Server } = require("socket.io");
 
 const app = require("./app");
@@ -25,17 +27,30 @@ const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
+  const { userId, name } = socket.handshake.query;
+  console.log(`✅ ${name} (${userId}) connected with socket.id ${socket.id}`);
 
-  // 9. Listen for custom events from clients
-  socket.on("chat_message", (msg) => {
-    console.log("Received:", msg);
-    io.emit("chat_message", msg); // broadcast to all connected clients
+  socket.on("join_conversations", (conversationIds) => {
+    conversationIds.forEach((id) => socket.join(id));
   });
 
-  // 10. Handle disconnect
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+  socket.on("send_message", async ({ convoId, senderId, content }) => {
+    const convo = await Conversation.findById(convoId);
+    if (!convo || !convo.participants.some((p) => p.toString() === senderId))
+      return;
+
+    const newMsg = await Message.create({
+      conversation: convoId,
+      sender: senderId,
+      content,
+    });
+
+    // fetch populated message
+    const populatedMsg = await Message.findById(newMsg._id)
+      .populate("sender", "name email")
+      .populate("conversation", "_id");
+
+    io.to(convoId).emit("new_message", populatedMsg);
   });
 });
 const port = process.env.PORT || 3000;

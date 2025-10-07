@@ -1,19 +1,34 @@
-const messages = require("../models/messageModel");
-exports.getAllMessages = async (req, res) => {
+const Message = require("../models/messageModel");
+
+exports.getConversationMessages = async (req, res) => {
   try {
-    const allMessages = await messages.find().populate("by to", "name email");
-    res.json(allMessages);
-  } catch (error) {
-    res.status(500).send("Error retrieving messages");
+    console.log("recieved get converstional Message request");
+    const { convoId } = req.params;
+    const messages = await Message.find({ conversation: convoId })
+      .populate("sender", "name email")
+      .sort({ timestamp: 1 });
+
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
-exports.createMessage = async (req, res) => {
+exports.sendMessage = async (req, res) => {
   try {
-    const newMessage = new messages(req.body);
-    await newMessage.save();
-    res.status(201).send("Message created successfully");
-  } catch (error) {
-    res.status(500).send("Error creating message");
+    const { convoId } = req.params;
+    const { senderId, content } = req.body;
+
+    const newMsg = await Message.create({
+      conversation: convoId,
+      sender: senderId,
+      content,
+    });
+
+    res.json(newMsg);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };

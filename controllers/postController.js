@@ -136,3 +136,5 @@ exports.deletePost = async (req, res) => {
     res.status(500).json({ status: "error", message: err.message });
   }
 };
+
+exports.likePost = async (req, res) => {};

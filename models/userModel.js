@@ -23,7 +23,9 @@ const ProfileSchema = new mongoose.Schema({
   },
   passwordConfirm: {
     type: String,
-    required: [true, "Please confirm your password"],
+    required: function () {
+      return this.isNew;
+    },
     validate: {
       validator: function (el) {
         return el === this.password;
@@ -33,6 +35,43 @@ const ProfileSchema = new mongoose.Schema({
   },
   passwordResetToken: String,
   passwordResetExpires: Date,
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "Profiles" }],
+  friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "Profiles" }],
+
+  // Profile Information
+  profilePicture: { type: String },
+  bio: { type: String, maxlength: 500 },
+  gender: {
+    type: String,
+    enum: ["male", "female", "nonbinary", "other"],
+    default: "other",
+  },
+  dateOfBirth: { type: Date },
+  location: {
+    city: String,
+    country: String,
+  },
+
+  // Account Metadata
+  role: { type: String, enum: ["user", "admin"], default: "user" },
+  createdAt: { type: Date, default: Date.now },
+
+  // Optional Integrations
+  interests: [String],
+  occupation: String,
+  education: {
+    school: String,
+    degree: String,
+    fieldOfStudy: String,
+  },
+  skills: [String],
+  socialLinks: {
+    facebook: String,
+    instagram: String,
+    twitter: String,
+    linkedin: String,
+    github: String,
+  },
 });
 
 // Hash password before saving
@@ -44,7 +83,10 @@ ProfileSchema.pre("save", async function (next) {
 });
 
 // Compare password for login
-ProfileSchema.methods.correctPassword = async function (candidate, userPassword) {
+ProfileSchema.methods.correctPassword = async function (
+  candidate,
+  userPassword
+) {
   return await bcrypt.compare(candidate, userPassword);
 };
 
@@ -61,4 +103,4 @@ ProfileSchema.methods.createPasswordResetToken = function () {
   return resetToken;
 };
 
-module.exports = mongoose.model("Profiles", ProfileSchema); 
+module.exports = mongoose.model("Profiles", ProfileSchema);

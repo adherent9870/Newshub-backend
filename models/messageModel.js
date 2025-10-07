@@ -1,23 +1,23 @@
 const mongoose = require("mongoose");
 
 const PostSchema = mongoose.Schema({
-  message: {
-    type: String,
-    required: [true, "Message must have content"],
+  conversation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Conversation",
+    required: true,
   },
-  time: {
+  sender: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Profiles",
+    required: true,
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+  timestamp: {
     type: Date,
     default: Date.now,
-  },
-  by: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Profiles",
-    required: true,
-  },
-  to: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Profiles",
-    required: true,
   },
 });
 
